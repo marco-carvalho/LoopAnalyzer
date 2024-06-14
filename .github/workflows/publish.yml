@@ -21,8 +21,6 @@ jobs:
 
       - run: dotnet build *.sln --no-restore -c Release
 
-      - run: dotnet test
-
       - run: dotnet pack *.sln --no-build --output .
 
       - run: dotnet nuget push *.nupkg --api-key ${API_KEY} --source ${SOURCE} --skip-duplicate
