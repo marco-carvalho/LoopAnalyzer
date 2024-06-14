@@ -19,7 +19,7 @@ jobs:
 
       - run: dotnet restore
 
-      - run: dotnet build *.sln --no-restore
+      - run: dotnet build *.sln --no-restore -c Release
 
       - run: dotnet test
 
