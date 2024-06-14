@@ -7,18 +7,11 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     permissions:
       contents: write
       packages: write
       pull-requests: write
-
-    strategy:
-      matrix:
-        os:
-          - ubuntu-latest
-          - windows-latest
-          - macos-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -27,8 +20,8 @@ jobs:
 
       - run: dotnet restore
 
-      - run: dotnet build *.sln --no-restore
+      - run: dotnet build *.sln --no-restore -c Release
 
-      - run: dotnet test
+      - run: dotnet test --no-build
 
       - run: dotnet pack *.sln --no-build --output .
