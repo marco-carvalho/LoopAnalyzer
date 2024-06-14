@@ -1,0 +1,31 @@
+name: Publish
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v3
+
+      - run: dotnet restore
+
+      - run: dotnet build *.sln --no-restore
+
+      - run: dotnet test
+
+      - run: dotnet pack *.sln --no-build --output .
+
+      - run: dotnet nuget push *.nupkg --api-key ${API_KEY} --source ${SOURCE} --skip-duplicate
+        env:
+          API_KEY: ${{ secrets.NUGET_API_KEY }}
+          SOURCE: "https://api.nuget.org/v3/index.json"
