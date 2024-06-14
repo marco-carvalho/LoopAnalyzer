@@ -25,6 +25,7 @@ jobs:
 
       - run: dotnet pack *.sln --no-build --output .
 
-      - run: dotnet nuget push *.nupkg --api-key ${API_KEY} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      - run: dotnet nuget push *.nupkg --api-key ${API_KEY} --source ${SOURCE} --skip-duplicate
         env:
           API_KEY: ${{ secrets.NUGET_API_KEY }}
+          SOURCE: "https://api.nuget.org/v3/index.json"
