@@ -12,7 +12,7 @@ public class LoopAnalyzer : DiagnosticAnalyzer
     private static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(
         id: "LoopAnalyzer",
         title: "Loop usage recommendation",
-        messageFormat: "Consider using '{0}' loop when iterating over a '{1}'",
+        messageFormat: "Prefer '{0}' over '{1}' for '{2}' iteration",
         category: "Performance",
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true
@@ -24,31 +24,50 @@ public class LoopAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-        context.RegisterSyntaxNodeAction(AnalyzeSyntaxNode, SyntaxKind.ForStatement, SyntaxKind.ForEachStatement);
+        context.RegisterSyntaxNodeAction(AnalyzeForLoop, SyntaxKind.ForStatement);
+        context.RegisterSyntaxNodeAction(AnalyzeForEachLoop, SyntaxKind.ForEachStatement);
     }
 
-    private static void AnalyzeSyntaxNode(SyntaxNodeAnalysisContext context)
+    private static void AnalyzeForLoop(SyntaxNodeAnalysisContext context)
     {
-        switch (context.Node)
+        var forStatement = context.Node as ForStatementSyntax;
+
+        if (forStatement.Condition is not BinaryExpressionSyntax binaryExpression)
         {
-            case ForEachStatementSyntax forEachStatement:
-                {
-                    var info = context.SemanticModel.GetTypeInfo(forEachStatement.Expression);
-
-                    if (info.Type != null && info.Type.TypeKind == TypeKind.Array)
-                    {
-                        var diagnostic = Diagnostic.Create(Rule, forEachStatement.GetLocation(), "for", "Array");
-                        context.ReportDiagnostic(diagnostic);
-                    }
-
-                    break;
-                }
-
-            case ForStatementSyntax forStatement:
-                {
-                    //TODO
-                    break;
-                }
+            return;
         }
+
+        if (binaryExpression.Right is not MemberAccessExpressionSyntax memberAccess)
+        {
+            return;
+        }
+
+        if (memberAccess.Expression is not IdentifierNameSyntax identifier)
+        {
+            return;
+        }
+
+        if (context.SemanticModel.GetTypeInfo(identifier).Type is not IArrayTypeSymbol)
+        {
+            return;
+        }
+
+        var diagnostic = Diagnostic.Create(Rule, forStatement.ForKeyword.GetLocation(), "foreach", "for", "array");
+        context.ReportDiagnostic(diagnostic);
+    }
+
+    private static void AnalyzeForEachLoop(SyntaxNodeAnalysisContext context)
+    {
+        var forEachStatement = context.Node as ForEachStatementSyntax;
+
+        var collectionTypeInfo = context.SemanticModel.GetTypeInfo(forEachStatement.Expression).Type;
+
+        if (collectionTypeInfo?.OriginalDefinition.ToString() != "System.Collections.Generic.List<T>")
+        {
+            return;
+        }
+
+        var diagnostic = Diagnostic.Create(Rule, forEachStatement.ForEachKeyword.GetLocation(), "for", "foreach", "list");
+        context.ReportDiagnostic(diagnostic);
     }
 }
