@@ -19,9 +19,9 @@ jobs:
 
       - run: dotnet restore
 
-      - run: dotnet build *.sln --no-restore -c Release
+      - run: dotnet build src --no-restore -c Release
 
-      - run: dotnet pack *.sln --no-build --output .
+      - run: dotnet pack src --no-build --output .
 
       - run: dotnet nuget push *.nupkg --api-key ${API_KEY} --source ${SOURCE} --skip-duplicate
         env:
