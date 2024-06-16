@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -7,25 +7,24 @@ using Microsoft.CodeAnalysis.Diagnostics;
 namespace LoopAnalyzer;
 
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public class LoopAnalyzer : DiagnosticAnalyzer
+public class ForLoopAnalyzer : DiagnosticAnalyzer
 {
-    private static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(
-        id: "LoopAnalyzer",
-        title: "Loop usage recommendation",
-        messageFormat: "Prefer '{0}' over '{1}' for '{2}' iteration",
+    private static readonly DiagnosticDescriptor ForLoopRule = new DiagnosticDescriptor(
+        id: "LoopAnalyzer001",
+        title: "For loop usage recommendation",
+        messageFormat: "Prefer 'foreach' over 'for' for 'Array' iteration",
         category: "Performance",
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true
     );
 
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(ForLoopRule);
 
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
         context.RegisterSyntaxNodeAction(AnalyzeForLoop, SyntaxKind.ForStatement);
-        context.RegisterSyntaxNodeAction(AnalyzeForEachLoop, SyntaxKind.ForEachStatement);
     }
 
     private static void AnalyzeForLoop(SyntaxNodeAnalysisContext context)
@@ -52,22 +51,7 @@ public class LoopAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        var diagnostic = Diagnostic.Create(Rule, forStatement.ForKeyword.GetLocation(), "foreach", "for", "array");
-        context.ReportDiagnostic(diagnostic);
-    }
-
-    private static void AnalyzeForEachLoop(SyntaxNodeAnalysisContext context)
-    {
-        var forEachStatement = context.Node as ForEachStatementSyntax;
-
-        var collectionTypeInfo = context.SemanticModel.GetTypeInfo(forEachStatement.Expression).Type;
-
-        if (collectionTypeInfo?.OriginalDefinition.ToString() != "System.Collections.Generic.List<T>")
-        {
-            return;
-        }
-
-        var diagnostic = Diagnostic.Create(Rule, forEachStatement.ForEachKeyword.GetLocation(), "for", "foreach", "list");
+        var diagnostic = Diagnostic.Create(ForLoopRule, forStatement.ForKeyword.GetLocation());
         context.ReportDiagnostic(diagnostic);
     }
 }
