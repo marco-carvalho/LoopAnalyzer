@@ -47,9 +47,31 @@ public class PreferForeachOverForOnListAnalyzer : DiagnosticAnalyzer
         }
 
         var collectionTypeInfo = context.SemanticModel.GetTypeInfo(identifier).Type;
-
         if (collectionTypeInfo?.OriginalDefinition.ToString() != "System.Collections.Generic.List<T>")
         {
+            return;
+        }
+
+        var arraySymbol = context.SemanticModel.GetSymbolInfo(identifier).Symbol;
+        if (arraySymbol == null)
+        {
+            return;
+        }
+
+        foreach (var descendantNode in forStatement.Statement.DescendantNodes())
+        {
+            if (descendantNode is not AssignmentExpressionSyntax assignment)
+            {
+                continue;
+            }
+            if (assignment.Left is not ElementAccessExpressionSyntax elementAccess)
+            {
+                continue;
+            }
+            if (context.SemanticModel.GetSymbolInfo(elementAccess.Expression).Symbol?.Equals(arraySymbol) == false)
+            {
+                continue;
+            }
             return;
         }
 
