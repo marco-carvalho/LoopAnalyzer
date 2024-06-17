@@ -7,14 +7,14 @@ using Microsoft.CodeAnalysis.Diagnostics;
 namespace LoopAnalyzer;
 
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public class ForLoopAnalyzer : DiagnosticAnalyzer
+public class PreferForeachOverForOnArrayAnalyzer : DiagnosticAnalyzer
 {
     private static readonly DiagnosticDescriptor ForLoopRule = new DiagnosticDescriptor(
         id: "LoopAnalyzer001",
         title: "For loop usage recommendation",
         messageFormat: "Prefer 'foreach' over 'for' for 'Array' iteration",
         category: "Performance",
-        defaultSeverity: DiagnosticSeverity.Warning,
+        defaultSeverity: DiagnosticSeverity.Info,
         isEnabledByDefault: true
     );
 
